@@ -1,0 +1,280 @@
+
+<style>
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.section{margin:1.5rem 0}
+.section-title{font-size:14px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.metric .label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.metric .value{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.metric .value.green{color:#1D9E75}
+.metric .value.red{color:#E24B4A}
+.metric .value.blue{color:#185FA5}
+.row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.row label{font-size:13px;color:var(--color-text-secondary);flex:0 0 280px}
+.row input[type=range]{flex:1}
+.row .val{font-size:13px;font-weight:500;min-width:52px;text-align:right}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:1.5rem 0}
+.funnel-row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px}
+.funnel-bar-wrap{flex:1;background:var(--color-background-secondary);border-radius:4px;height:10px;overflow:hidden}
+.funnel-bar{height:10px;border-radius:4px;background:#185FA5;transition:width .3s}
+.funnel-label{min-width:48px;text-align:right;color:var(--color-text-secondary)}
+.funnel-name{min-width:200px;color:var(--color-text-primary)}
+.rebill-table{width:100%;border-collapse:collapse;font-size:13px}
+.rebill-table th{text-align:left;font-weight:500;color:var(--color-text-secondary);padding:4px 8px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.rebill-table td{padding:4px 8px;color:var(--color-text-primary)}
+.rebill-table tr:nth-child(even) td{background:var(--color-background-secondary)}
+.tabs{display:flex;gap:8px;margin-bottom:1rem}
+.tab{padding:6px 16px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);font-size:13px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.tab.active{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500}
+.panel{display:none}.panel.active{display:block}
+</style>
+<h2 class="sr-only">Інтерактивний калькулятор юніт-економіки та ROMI воронки</h2>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('inputs')">Вхідні дані</button>
+  <button class="tab" onclick="showTab('funnel')">Воронка</button>
+  <button class="tab" onclick="showTab('rebills')">Ребіли</button>
+  <button class="tab" onclick="showTab('results')">Результати</button>
+</div>
+
+<div id="tab-inputs" class="panel active">
+  <div class="section">
+    <div class="section-title">Конверсії воронки</div>
+    <div id="conv-sliders"></div>
+  </div>
+  <hr class="divider">
+  <div class="section">
+    <div class="section-title">Ціни та метрики</div>
+    <div id="metric-sliders"></div>
+  </div>
+  <hr class="divider">
+  <div class="section">
+    <div class="section-title">Витрати та параметри</div>
+    <div id="cost-sliders"></div>
+  </div>
+</div>
+
+<div id="tab-funnel" class="panel">
+  <div class="section">
+    <div class="section-title">Прохід 1000 кліків через воронку</div>
+    <div id="funnel-viz"></div>
+  </div>
+</div>
+
+<div id="tab-rebills" class="panel">
+  <div class="section">
+    <div class="section-title">Розклад ребілів на 1 покупця тріалу</div>
+    <div id="rebill-viz"></div>
+  </div>
+</div>
+
+<div id="tab-results" class="panel">
+  <div class="section">
+    <div class="section-title">На 1000 кліків</div>
+    <div class="grid4" id="top-metrics"></div>
+  </div>
+  <hr class="divider">
+  <div class="section">
+    <div class="section-title">Дохід (на 1000 кліків)</div>
+    <div class="grid3" id="revenue-metrics"></div>
+  </div>
+  <hr class="divider">
+  <div class="section">
+    <div class="section-title">Витрати та прибуток</div>
+    <div class="grid4" id="cost-metrics"></div>
+  </div>
+  <hr class="divider">
+  <div class="section">
+    <div class="section-title">ROMI та LTV</div>
+    <div class="grid3" id="romi-metrics"></div>
+  </div>
+</div>
+
+<script>
+const convDefs = [
+  {id:'c1',label:'Клік → Стартовий екран',def:0.95},
+  {id:'c2',label:'Стартовий → Другий екран',def:0.75},
+  {id:'c3',label:'Другий → Вибір дати',def:0.95},
+  {id:'c4',label:'Вибір дати → Email',def:0.70},
+  {id:'c5',label:'Email → Вибір тріалу',def:0.95},
+  {id:'c6',label:'Вибір тріалу → Офер',def:0.40},
+  {id:'c7',label:'Офер → Білінг форма',def:0.40},
+  {id:'c8',label:'Білінг форма → Спроба оплати',def:0.65},
+  {id:'c9',label:'Спроба → Успішна оплата',def:0.70},
+  {id:'c10',label:'Успішна оплата → Upsell 1',def:0.25},
+  {id:'c11',label:'Успішна оплата → Upsell 2',def:0.05},
+];
+const metricDefs = [
+  {id:'cpc',label:'CPC, $',def:1,min:0.1,max:5,step:0.1,fmt:v=>'$'+v.toFixed(2)},
+  {id:'trialPrice',label:'Ціна тріалу, $',def:3,min:0,max:20,step:0.5,fmt:v=>'$'+v.toFixed(2)},
+  {id:'subPrice',label:'Ціна підписки (за ребіл), $',def:19,min:5,max:100,step:1,fmt:v=>'$'+v},
+  {id:'up1Price',label:'Ціна Upsell 1, $',def:22,min:5,max:100,step:1,fmt:v=>'$'+v},
+  {id:'up2Price',label:'Ціна Upsell 2, $',def:50,min:5,max:200,step:1,fmt:v=>'$'+v},
+  {id:'c01',label:'Trial → 1-й ребіл (C0), %',def:55,min:5,max:100,step:1,fmt:v=>v+'%'},
+  {id:'rebilFactor',label:'Множник спаду конверсії Cn = k × C(n-1)',def:0.8,min:0.5,max:1,step:0.01,fmt:v=>v.toFixed(2)},
+  {id:'rebilWeeks',label:'Період між ребілами, тижнів',def:2,min:1,max:8,step:1,fmt:v=>v+' тижнів'},
+  {id:'maxWeeks',label:'Обмеження терміну підписки, тижнів',def:21,min:4,max:52,step:1,fmt:v=>v+' тижнів'},
+];
+const costDefs = [
+  {id:'processing',label:'Вартість процесингу, %',def:15,min:0,max:30,step:1,fmt:v=>v+'%'},
+  {id:'refund',label:'Refund Rate, %',def:5,min:0,max:20,step:1,fmt:v=>v+'%'},
+  {id:'tax',label:'Непрямі податки, %',def:10,min:0,max:25,step:1,fmt:v=>v+'%'},
+];
+
+function makeSliders(container, defs, isConv) {
+  defs.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    const min = isConv ? 0 : d.min;
+    const max = isConv ? 100 : d.max;
+    const step = isConv ? 1 : d.step;
+    const defVal = isConv ? Math.round(d.def*100) : d.def;
+    const fmt = isConv ? v => v+'%' : d.fmt;
+    row.innerHTML = `<label>${d.label}</label><input type="range" id="${d.id}" min="${min}" max="${max}" step="${step}" value="${defVal}"><span class="val" id="${d.id}-out">${fmt(defVal)}</span>`;
+    container.appendChild(row);
+    row.querySelector('input').addEventListener('input', function() {
+      row.querySelector(`#${d.id}-out`).textContent = fmt(parseFloat(this.value));
+      recalc();
+    });
+  });
+}
+
+makeSliders(document.getElementById('conv-sliders'), convDefs, true);
+makeSliders(document.getElementById('metric-sliders'), metricDefs, false);
+makeSliders(document.getElementById('cost-sliders'), costDefs, false);
+
+function getVal(id) { return parseFloat(document.getElementById(id).value); }
+
+function recalc() {
+  const c = {};
+  convDefs.forEach(d => c[d.id] = getVal(d.id)/100);
+  const cpc = getVal('cpc');
+  const trialPrice = getVal('trialPrice');
+  const subPrice = getVal('subPrice');
+  const up1Price = getVal('up1Price');
+  const up2Price = getVal('up2Price');
+  const c01 = getVal('c01')/100;
+  const kFactor = getVal('rebilFactor');
+  const rebilWeeks = getVal('rebilWeeks');
+  const maxWeeks = getVal('maxWeeks');
+  const processingRate = getVal('processing')/100;
+  const refundRate = getVal('refund')/100;
+  const taxRate = getVal('tax')/100;
+
+  const N = 1000;
+  const adSpend = N * cpc;
+
+  const steps = [
+    {name:'Кліки',val:N},
+    {name:'Стартовий екран',val:null,cr:c.c1},
+    {name:'Другий екран',val:null,cr:c.c2},
+    {name:'Вибір дати народження',val:null,cr:c.c3},
+    {name:'Email',val:null,cr:c.c4},
+    {name:'Вибір тріалу',val:null,cr:c.c5},
+    {name:'Екран оферу',val:null,cr:c.c6},
+    {name:'Білінг форма',val:null,cr:c.c7},
+    {name:'Спроба оплати',val:null,cr:c.c8},
+    {name:'Успішна оплата (тріал)',val:null,cr:c.c9},
+  ];
+  for(let i=1;i<steps.length;i++) steps[i].val = steps[i-1].val * steps[i].cr;
+  const trialBuyers = steps[steps.length-1].val;
+
+  const up1Buyers = trialBuyers * c.c10;
+  const up2Buyers = trialBuyers * c.c11;
+
+  const numRebils = Math.floor((maxWeeks - 0) / rebilWeeks);
+
+  let rebilRows = [];
+  let ltv1Gross = 0;
+  let prevCr = c01;
+  for(let i=0;i<numRebils;i++){
+    const cr = i===0 ? c01 : prevCr * kFactor;
+    prevCr = cr;
+    const week = (i+1)*rebilWeeks;
+    if(week > maxWeeks) break;
+    rebilRows.push({n:i+1, week, cr, rev: subPrice * cr});
+    ltv1Gross += subPrice * cr;
+  }
+
+  const grossTrialRev = trialBuyers * trialPrice;
+  const grossSubRev = trialBuyers * ltv1Gross;
+  const grossUp1Rev = up1Buyers * up1Price;
+  const grossUp2Rev = up2Buyers * up2Price;
+  const grossTotal = grossTrialRev + grossSubRev + grossUp1Rev + grossUp2Rev;
+
+  const totalDeductions = processingRate + refundRate + taxRate;
+  const netMultiplier = 1 - totalDeductions;
+  const netTotal = grossTotal * netMultiplier;
+  const profit = netTotal - adSpend;
+  const romi = ((netTotal - adSpend) / adSpend) * 100;
+  const ltv1Net = (trialPrice + ltv1Gross) * netMultiplier;
+  const cac = adSpend / trialBuyers;
+
+  updateFunnel(steps, trialBuyers, N);
+  updateRebils(rebilRows);
+
+  function metricCard(label, value, cls='') {
+    return `<div class="metric"><div class="label">${label}</div><div class="value ${cls}">${value}</div></div>`;
+  }
+
+  document.getElementById('top-metrics').innerHTML =
+    metricCard('Кліків', N.toLocaleString()) +
+    metricCard('Покупців тріалу', trialBuyers.toFixed(1)) +
+    metricCard('CAC, $', '$'+cac.toFixed(2)) +
+    metricCard('Рекламний бюджет', '$'+adSpend.toLocaleString());
+
+  document.getElementById('revenue-metrics').innerHTML =
+    metricCard('Дохід від тріалів (gross)', '$'+grossTrialRev.toFixed(0)) +
+    metricCard('Дохід від підписок (gross)', '$'+grossSubRev.toFixed(0)) +
+    metricCard('Дохід від Upsells (gross)', '$'+(grossUp1Rev+grossUp2Rev).toFixed(0));
+
+  document.getElementById('cost-metrics').innerHTML =
+    metricCard('Gross дохід', '$'+grossTotal.toFixed(0)) +
+    metricCard('Відрахування (proc+refund+tax)', '-$'+(grossTotal*totalDeductions).toFixed(0), 'red') +
+    metricCard('Net дохід', '$'+netTotal.toFixed(0), 'green') +
+    metricCard('Net прибуток', (profit>=0?'+':'')+' $'+profit.toFixed(0), profit>=0?'green':'red');
+
+  document.getElementById('romi-metrics').innerHTML =
+    metricCard('ROMI', romi.toFixed(1)+'%', romi>=0?'green':'red') +
+    metricCard('LTV 1 покупця (net)', '$'+ltv1Net.toFixed(2), 'blue') +
+    metricCard('LTV / CAC', (ltv1Net/cac).toFixed(2)+'×', ltv1Net/cac>=3?'green':'');
+}
+
+function updateFunnel(steps, trialBuyers, N) {
+  const el = document.getElementById('funnel-viz');
+  el.innerHTML = '';
+  steps.forEach(s => {
+    const pct = (s.val/N*100);
+    const row = document.createElement('div');
+    row.className = 'funnel-row';
+    row.innerHTML = `<span class="funnel-name">${s.name}</span><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%"></div></div><span class="funnel-label">${s.val.toFixed(1)}</span>`;
+    el.appendChild(row);
+  });
+}
+
+function updateRebils(rows) {
+  const el = document.getElementById('rebill-viz');
+  let html = '<table class="rebill-table"><thead><tr><th>Ребіл №</th><th>Тиждень</th><th>Конверсія</th><th>Дохід на 1 покупця</th></tr></thead><tbody>';
+  let total = 0;
+  rows.forEach(r => {
+    total += r.rev;
+    html += `<tr><td>${r.n}</td><td>${r.week}</td><td>${(r.cr*100).toFixed(1)}%</td><td>$${r.rev.toFixed(2)}</td></tr>`;
+  });
+  html += `<tr><td colspan="3" style="font-weight:500">Сума LTV з підписок</td><td style="font-weight:500">$${total.toFixed(2)}</td></tr>`;
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+  recalc();
+}
+
+recalc();
+</script>
