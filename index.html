@@ -1,45 +1,58 @@
-
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Юніт-економіка та ROMI калькулятор</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
-h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a18;padding:2rem;font-size:16px;line-height:1.7}
+h1{font-size:22px;font-weight:500;margin-bottom:1.5rem}
 .section{margin:1.5rem 0}
-.section-title{font-size:14px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.section-title{font-size:14px;font-weight:500;color:#888780;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
-.metric .label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
-.metric .value{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.metric{background:#e8e8e2;border-radius:8px;padding:10px 12px}
+.metric .label{font-size:12px;color:#888780;margin-bottom:4px}
+.metric .value{font-size:20px;font-weight:500;color:#1a1a18}
 .metric .value.green{color:#1D9E75}
 .metric .value.red{color:#E24B4A}
 .metric .value.blue{color:#185FA5}
 .row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.row label{font-size:13px;color:var(--color-text-secondary);flex:0 0 280px}
-.row input[type=range]{flex:1}
-.row .val{font-size:13px;font-weight:500;min-width:52px;text-align:right}
-.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:1.5rem 0}
+.row label{font-size:13px;color:#888780;flex:0 0 280px}
+.row input[type=range]{flex:1;accent-color:#185FA5}
+.row .val{font-size:13px;font-weight:500;min-width:52px;text-align:right;color:#1a1a18}
+.divider{border:none;border-top:0.5px solid rgba(0,0,0,0.15);margin:1.5rem 0}
 .funnel-row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px}
-.funnel-bar-wrap{flex:1;background:var(--color-background-secondary);border-radius:4px;height:10px;overflow:hidden}
+.funnel-bar-wrap{flex:1;background:#e8e8e2;border-radius:4px;height:10px;overflow:hidden}
 .funnel-bar{height:10px;border-radius:4px;background:#185FA5;transition:width .3s}
-.funnel-label{min-width:48px;text-align:right;color:var(--color-text-secondary)}
-.funnel-name{min-width:200px;color:var(--color-text-primary)}
+.funnel-label{min-width:48px;text-align:right;color:#888780}
+.funnel-name{min-width:200px;color:#1a1a18}
 .rebill-table{width:100%;border-collapse:collapse;font-size:13px}
-.rebill-table th{text-align:left;font-weight:500;color:var(--color-text-secondary);padding:4px 8px;border-bottom:0.5px solid var(--color-border-tertiary)}
-.rebill-table td{padding:4px 8px;color:var(--color-text-primary)}
-.rebill-table tr:nth-child(even) td{background:var(--color-background-secondary)}
-.tabs{display:flex;gap:8px;margin-bottom:1rem}
-.tab{padding:6px 16px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);font-size:13px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
-.tab.active{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500}
+.rebill-table th{text-align:left;font-weight:500;color:#888780;padding:4px 8px;border-bottom:0.5px solid rgba(0,0,0,0.15)}
+.rebill-table td{padding:4px 8px;color:#1a1a18}
+.rebill-table tr:nth-child(even) td{background:#e8e8e2}
+.tabs{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.tab{padding:6px 16px;border-radius:8px;border:0.5px solid rgba(0,0,0,0.2);font-size:13px;cursor:pointer;background:transparent;color:#888780}
+.tab.active{background:#e8e8e2;color:#1a1a18;font-weight:500}
 .panel{display:none}.panel.active{display:block}
+@media(max-width:600px){
+  .grid3,.grid4{grid-template-columns:1fr 1fr}
+  .row label{flex:0 0 180px}
+}
 </style>
-<h2 class="sr-only">Інтерактивний калькулятор юніт-економіки та ROMI воронки</h2>
-
+</head>
+<body>
+<h1>Юніт-економіка та ROMI воронки</h1>
+ 
 <div class="tabs">
-  <button class="tab active" onclick="showTab('inputs')">Вхідні дані</button>
-  <button class="tab" onclick="showTab('funnel')">Воронка</button>
-  <button class="tab" onclick="showTab('rebills')">Ребіли</button>
-  <button class="tab" onclick="showTab('results')">Результати</button>
+  <button class="tab active" onclick="showTab('inputs',this)">Вхідні дані</button>
+  <button class="tab" onclick="showTab('funnel',this)">Воронка</button>
+  <button class="tab" onclick="showTab('rebills',this)">Ребіли</button>
+  <button class="tab" onclick="showTab('results',this)">Результати</button>
 </div>
-
+ 
 <div id="tab-inputs" class="panel active">
   <div class="section">
     <div class="section-title">Конверсії воронки</div>
@@ -56,21 +69,21 @@ h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,
     <div id="cost-sliders"></div>
   </div>
 </div>
-
+ 
 <div id="tab-funnel" class="panel">
   <div class="section">
     <div class="section-title">Прохід 1000 кліків через воронку</div>
     <div id="funnel-viz"></div>
   </div>
 </div>
-
+ 
 <div id="tab-rebills" class="panel">
   <div class="section">
     <div class="section-title">Розклад ребілів на 1 покупця тріалу</div>
     <div id="rebill-viz"></div>
   </div>
 </div>
-
+ 
 <div id="tab-results" class="panel">
   <div class="section">
     <div class="section-title">На 1000 кліків</div>
@@ -92,7 +105,7 @@ h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,
     <div class="grid3" id="romi-metrics"></div>
   </div>
 </div>
-
+ 
 <script>
 const convDefs = [
   {id:'c1',label:'Клік → Стартовий екран',def:0.95},
@@ -123,7 +136,7 @@ const costDefs = [
   {id:'refund',label:'Refund Rate, %',def:5,min:0,max:20,step:1,fmt:v=>v+'%'},
   {id:'tax',label:'Непрямі податки, %',def:10,min:0,max:25,step:1,fmt:v=>v+'%'},
 ];
-
+ 
 function makeSliders(container, defs, isConv) {
   defs.forEach(d => {
     const row = document.createElement('div');
@@ -136,18 +149,18 @@ function makeSliders(container, defs, isConv) {
     row.innerHTML = `<label>${d.label}</label><input type="range" id="${d.id}" min="${min}" max="${max}" step="${step}" value="${defVal}"><span class="val" id="${d.id}-out">${fmt(defVal)}</span>`;
     container.appendChild(row);
     row.querySelector('input').addEventListener('input', function() {
-      row.querySelector(`#${d.id}-out`).textContent = fmt(parseFloat(this.value));
+      document.getElementById(d.id+'-out').textContent = fmt(parseFloat(this.value));
       recalc();
     });
   });
 }
-
+ 
 makeSliders(document.getElementById('conv-sliders'), convDefs, true);
 makeSliders(document.getElementById('metric-sliders'), metricDefs, false);
 makeSliders(document.getElementById('cost-sliders'), costDefs, false);
-
+ 
 function getVal(id) { return parseFloat(document.getElementById(id).value); }
-
+ 
 function recalc() {
   const c = {};
   convDefs.forEach(d => c[d.id] = getVal(d.id)/100);
@@ -163,10 +176,10 @@ function recalc() {
   const processingRate = getVal('processing')/100;
   const refundRate = getVal('refund')/100;
   const taxRate = getVal('tax')/100;
-
+ 
   const N = 1000;
   const adSpend = N * cpc;
-
+ 
   const steps = [
     {name:'Кліки',val:N},
     {name:'Стартовий екран',val:null,cr:c.c1},
@@ -181,16 +194,14 @@ function recalc() {
   ];
   for(let i=1;i<steps.length;i++) steps[i].val = steps[i-1].val * steps[i].cr;
   const trialBuyers = steps[steps.length-1].val;
-
+ 
   const up1Buyers = trialBuyers * c.c10;
   const up2Buyers = trialBuyers * c.c11;
-
-  const numRebils = Math.floor((maxWeeks - 0) / rebilWeeks);
-
+ 
   let rebilRows = [];
   let ltv1Gross = 0;
   let prevCr = c01;
-  for(let i=0;i<numRebils;i++){
+  for(let i=0;i<100;i++){
     const cr = i===0 ? c01 : prevCr * kFactor;
     prevCr = cr;
     const week = (i+1)*rebilWeeks;
@@ -198,52 +209,52 @@ function recalc() {
     rebilRows.push({n:i+1, week, cr, rev: subPrice * cr});
     ltv1Gross += subPrice * cr;
   }
-
+ 
   const grossTrialRev = trialBuyers * trialPrice;
   const grossSubRev = trialBuyers * ltv1Gross;
   const grossUp1Rev = up1Buyers * up1Price;
   const grossUp2Rev = up2Buyers * up2Price;
   const grossTotal = grossTrialRev + grossSubRev + grossUp1Rev + grossUp2Rev;
-
+ 
   const totalDeductions = processingRate + refundRate + taxRate;
   const netMultiplier = 1 - totalDeductions;
   const netTotal = grossTotal * netMultiplier;
   const profit = netTotal - adSpend;
   const romi = ((netTotal - adSpend) / adSpend) * 100;
-  const ltv1Net = (trialPrice + ltv1Gross) * netMultiplier;
   const cac = adSpend / trialBuyers;
-
-  updateFunnel(steps, trialBuyers, N);
+  const ltv1Net = netTotal / trialBuyers;
+ 
+  updateFunnel(steps, N);
   updateRebils(rebilRows);
-
+ 
   function metricCard(label, value, cls='') {
     return `<div class="metric"><div class="label">${label}</div><div class="value ${cls}">${value}</div></div>`;
   }
-
+ 
   document.getElementById('top-metrics').innerHTML =
     metricCard('Кліків', N.toLocaleString()) +
     metricCard('Покупців тріалу', trialBuyers.toFixed(1)) +
     metricCard('CAC, $', '$'+cac.toFixed(2)) +
     metricCard('Рекламний бюджет', '$'+adSpend.toLocaleString());
-
+ 
   document.getElementById('revenue-metrics').innerHTML =
     metricCard('Дохід від тріалів (gross)', '$'+grossTrialRev.toFixed(0)) +
     metricCard('Дохід від підписок (gross)', '$'+grossSubRev.toFixed(0)) +
     metricCard('Дохід від Upsells (gross)', '$'+(grossUp1Rev+grossUp2Rev).toFixed(0));
-
+ 
   document.getElementById('cost-metrics').innerHTML =
     metricCard('Gross дохід', '$'+grossTotal.toFixed(0)) +
     metricCard('Відрахування (proc+refund+tax)', '-$'+(grossTotal*totalDeductions).toFixed(0), 'red') +
     metricCard('Net дохід', '$'+netTotal.toFixed(0), 'green') +
     metricCard('Net прибуток', (profit>=0?'+':'')+' $'+profit.toFixed(0), profit>=0?'green':'red');
-
+ 
   document.getElementById('romi-metrics').innerHTML =
     metricCard('ROMI', romi.toFixed(1)+'%', romi>=0?'green':'red') +
     metricCard('LTV 1 покупця (net)', '$'+ltv1Net.toFixed(2), 'blue') +
     metricCard('LTV / CAC', (ltv1Net/cac).toFixed(2)+'×', ltv1Net/cac>=3?'green':'');
 }
-
-function updateFunnel(steps, trialBuyers, N) {
+ 
+function updateFunnel(steps, N) {
   const el = document.getElementById('funnel-viz');
   el.innerHTML = '';
   steps.forEach(s => {
@@ -254,7 +265,7 @@ function updateFunnel(steps, trialBuyers, N) {
     el.appendChild(row);
   });
 }
-
+ 
 function updateRebils(rows) {
   const el = document.getElementById('rebill-viz');
   let html = '<table class="rebill-table"><thead><tr><th>Ребіл №</th><th>Тиждень</th><th>Конверсія</th><th>Дохід на 1 покупця</th></tr></thead><tbody>';
@@ -267,14 +278,16 @@ function updateRebils(rows) {
   html += '</tbody></table>';
   el.innerHTML = html;
 }
-
-function showTab(name) {
+ 
+function showTab(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
-  event.target.classList.add('active');
+  btn.classList.add('active');
   recalc();
 }
-
+ 
 recalc();
 </script>
+</body>
+</html>
